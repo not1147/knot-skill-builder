@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Skill Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* VOICE: เครื่องมือทำงานที่สงบ ชัด เชื่อถือได้ — Flat Design ตามระบบดีไซน์ UI/UX Pro Max
+   IDEA: ตัวช่วยกรอกทีละขั้น (stepper) ซ้าย · ฟอร์ม กลาง · ไฟล์ผลลัพธ์สด ขวา
+   PICTURE: ตัวฟอร์มเองคือภาพหลัก พร้อมแถบความคืบหน้าและพรีวิวไฟล์
+   COLOUR and TYPE: teal #0F766E หลัก, ส้ม #C2410C ปุ่ม CTA, พื้น #F0FDFA; Inter + IBM Plex Sans Thai
+   LAYOUT: appbar ด้านบน → 3 คอลัมน์ (≥1280) → 2 คอลัมน์ (≥960) → เรียงลง (มือถือ) */
+:root{color-scheme:light dark;
+ --bg:light-dark(#F0FDFA,#071a19);--surface:light-dark(#fff,#0d2523);--muted:light-dark(#E6F4F1,#12302d);
+ --ink:light-dark(#134E4A,#dcfaf5);--sub:light-dark(#475569,#9cbfba);--line:light-dark(#c5e9e3,#214a46);
+ --pri:light-dark(#0F766E,#2dd4bf);--onpri:light-dark(#fff,#03201c);--pri-soft:light-dark(#ccfbf1,#123e3a);
+ --acc:light-dark(#C2410C,#fb923c);--onacc:light-dark(#fff,#1f0a00);
+ --ok:light-dark(#047857,#34d399);--bad:light-dark(#B91C1C,#f87171);--smpc:light-dark(#93a9b0,#5d837e);
+ --code:light-dark(#0b2b29,#031413);--codet:#d6f5ef;--r:12px}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html{scroll-padding-top:84px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 Inter,"IBM Plex Sans Thai",system-ui,sans-serif;overflow-x:clip}
+[hidden]{display:none!important}
+.ic{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+button,.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:600 15px/1.2 inherit;min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;transition:background-color .15s,border-color .15s,color .15s}
+button:hover{border-color:var(--pri);color:var(--pri)}
+.pri{background:var(--pri);border-color:var(--pri);color:var(--onpri)}
+.pri:hover{background:light-dark(#115e59,#5eead4);color:var(--onpri)}
+.acc{background:var(--acc);border-color:var(--acc);color:var(--onacc)}
+.acc:hover{background:light-dark(#9a3412,#fdba74);border-color:transparent;color:var(--onacc)}
+.ghost{background:transparent;border-color:transparent}
+.ghost:hover{background:var(--muted)}
+:focus-visible{outline:2px solid var(--pri);outline-offset:2px}
+/* แถบบนสุด */
+.appbar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:12px max(3vw,16px);background:var(--surface);border-bottom:1px solid var(--line);z-index:10}
+@media(min-width:760px){.appbar{position:sticky;top:0}}
+.brand{display:flex;align-items:center;gap:12px;margin-right:auto}
+.logo{display:grid;place-items:center;width:40px;height:40px;border-radius:10px;background:var(--pri);color:var(--onpri)}
+.logo .ic{width:22px;height:22px}
+.brand h1{font-size:19px;line-height:1.2;margin:0;font-weight:700}
+.brand p{margin:0;font-size:13px;color:var(--sub)}
+.status{display:flex;align-items:center;gap:6px;font-size:13.5px;color:var(--sub);padding:6px 10px;border-radius:8px;background:var(--muted);cursor:help}
+.status.okk .ic{color:var(--ok)}.status.bad .ic{color:var(--bad)}
+.bar-acts{display:flex;gap:8px;flex-wrap:wrap}
+/* โครงหน้า */
+.shell{display:grid;grid-template-columns:236px minmax(0,1fr) minmax(0,440px);gap:24px;max-width:1560px;margin:0 auto;padding:24px max(3vw,16px) 72px;align-items:start}
+.steps,.side{position:sticky;top:88px}
+.steps{display:grid;gap:14px}
+.prog{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.prog-top{display:flex;justify-content:space-between;align-items:baseline}
+.prog b{font-size:28px;line-height:1;font-weight:700}
+.prog small{color:var(--sub);font-size:13px}
+.track{height:8px;border-radius:6px;background:var(--muted);margin-top:12px;overflow:hidden}
+.track i{display:block;height:100%;background:var(--pri);transition:width .25s}
+.steps ol{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.steps a{display:flex;gap:12px;align-items:flex-start;padding:9px 10px;border-radius:10px;color:var(--ink);text-decoration:none;transition:background-color .15s}
+.steps a:hover{background:var(--muted)}
+.dot{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;border:2px solid var(--line);margin-top:1px;flex:none;color:var(--onpri)}
+.dot .ic{width:14px;height:14px;stroke-width:3}
+.done .dot{background:var(--ok);border-color:var(--ok)}
+.steps b{display:block;font-size:14.5px;font-weight:600}
+.steps a small{display:block;font-size:12.5px;color:var(--sub);line-height:1.35}
+.steps .tools{display:flex;gap:6px;flex-wrap:wrap}
+.steps .tools button{flex:1;font-size:14px;padding:0 10px}
+@media(max-width:1280px){
+ .shell{grid-template-columns:minmax(0,1fr) minmax(0,420px)}
+ .steps{grid-column:1/-1;position:static;grid-template-columns:200px minmax(0,1fr);align-items:center}
+ .steps ol{display:flex;overflow-x:auto;gap:6px;padding-bottom:4px}
+ .steps ol>li{flex:none}
+ .steps a{white-space:nowrap;align-items:center;border:1px solid var(--line);background:var(--surface);padding:6px 12px 6px 8px}
+ .steps a small{display:none}
+ .steps .tools{grid-column:1/-1}
+ .steps .tools button{flex:none}
+}
+@media(max-width:960px){.shell{grid-template-columns:minmax(0,1fr)}.side{position:static}.steps{grid-template-columns:minmax(0,1fr)}}
+/* การ์ดฟอร์ม */
+section{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:clamp(18px,2.4vw,28px);margin-bottom:16px}
+.sh{display:flex;gap:12px;align-items:flex-start;margin-bottom:6px}
+.sh .ic{width:22px;height:22px;color:var(--pri);margin-top:3px}
+h2{font-size:20px;line-height:1.3;margin:0;font-weight:700}
+.why{margin:0 0 8px;color:var(--sub);font-size:14.5px;max-width:70ch}
+label{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;font-weight:600;font-size:14.5px;margin:18px 0 6px}
+label small{font-weight:400;color:var(--sub);font-size:13px}
+input,textarea,select{width:100%;font:16px/1.5 inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:44px;transition:border-color .15s}
+input:hover,textarea:hover,select:hover{border-color:light-dark(#8fd3c8,#2e6b66)}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--pri);outline-offset:0;border-color:var(--pri)}
+input[aria-invalid=true]{border-color:var(--bad)}
+textarea{min-height:92px;resize:vertical}
+.mono{font-family:"JetBrains Mono",monospace;font-size:14px}
+.row2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 16px}
+@media(max-width:640px){.row2{grid-template-columns:minmax(0,1fr)}}
+.err{display:flex;gap:6px;align-items:center;color:var(--bad);font-size:13.5px;margin:6px 0 0}
+.err .ic{width:16px;height:16px}
+.cnt{font-size:13px;color:var(--sub);margin-top:6px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.cnt b{font-weight:600;color:var(--ink)}.cnt.over b{color:var(--bad)}
+.item{border:1px solid var(--line);background:light-dark(#fafefd,#0a201e);border-radius:10px;padding:12px;margin-top:10px;display:grid;gap:8px}
+.item .h{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:600;color:var(--sub)}
+.item .h button{min-height:36px;padding:0 10px;font-size:13px;color:var(--sub)}
+.item .h button:hover{color:var(--bad);border-color:var(--bad)}
+.add{width:100%;margin-top:10px;border-style:dashed;color:var(--pri)}
+.smp{color:var(--smpc)!important;font-style:italic}
+.tipi{display:inline-grid;place-items:center;width:28px;height:28px;margin:-6px 0;border-radius:50%;color:var(--sub);cursor:help}
+.tipi .ic{width:16px;height:16px}
+.tipi:hover,.tipi:focus-visible{color:var(--pri);background:var(--pri-soft)}
+/* พรีวิว */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.tabs{display:flex;gap:4px;padding:8px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{flex:none;border:0;min-height:38px;font-size:14px;background:transparent;color:var(--sub)}
+.tabs button[aria-selected=true]{background:var(--pri-soft);color:var(--ink)}
+pre{margin:0;background:var(--code);color:var(--codet);padding:18px;font:13px/1.65 "JetBrains Mono","IBM Plex Sans Thai",monospace;white-space:pre-wrap;overflow-wrap:anywhere;height:min(52vh,560px);overflow:auto}
+.pacts{display:flex;gap:8px;flex-wrap:wrap;padding:12px;border-top:1px solid var(--line)}
+.pacts button{flex:1 1 140px}
+.ready{margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.ready h3{margin:0 0 4px;font-size:15.5px;display:flex;justify-content:space-between;align-items:center}
+.ready h3 span{font-size:13px;font-weight:500;color:var(--sub)}
+.checks{list-style:none;padding:0;margin:8px 0 0;font-size:14px}
+.checks li{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-top:1px solid var(--line)}
+.checks li .ic{margin-top:2px;color:var(--ok)}
+.checks li.no .ic{color:var(--bad)}
+.hint{font-size:13px;color:var(--sub);margin:12px 2px 0}
+code{font-family:"JetBrains Mono",monospace;font-size:.92em;background:var(--muted);padding:1px 5px;border-radius:5px;overflow-wrap:anywhere}
+#tip{position:fixed;z-index:30;background:var(--ink);color:var(--bg);font-size:14px;line-height:1.55;padding:10px 13px;border-radius:9px;opacity:0;pointer-events:none;transition:opacity .12s}
+#tip.on{opacity:1}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:8px;align-items:center;background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:10px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:40;max-width:calc(100vw - 32px)}
+.toast.on{opacity:1}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+ <symbol id="i-box" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4a2 2 0 0 0 1-1.7z"/><path d="M3.3 7 12 12l8.7-5M12 22V12"/></symbol>
+ <symbol id="i-dl" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+ <symbol id="i-save" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></symbol>
+ <symbol id="i-open" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+ <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+ <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+ <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></symbol>
+ <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
+ <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+ <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6M9 6V4h6v2"/></symbol>
+ <symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 3 1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></symbol>
+ <symbol id="i-reset" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></symbol>
+ <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></symbol>
+ <symbol id="i-id" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="11" r="2.5"/><path d="M6 17c.6-1.6 1.8-2.5 3-2.5s2.4.9 3 2.5M15 10h3M15 14h3"/></symbol>
+ <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></symbol>
+ <symbol id="i-in" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></symbol>
+ <symbol id="i-list" viewBox="0 0 24 24"><path d="M10 6h11M10 12h11M10 18h11M4 6h1M4 12h1M4 18h1"/></symbol>
+ <symbol id="i-out" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
+ <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+ <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+ <symbol id="i-warn" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></symbol>
+ <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></symbol>
+ <symbol id="i-test" viewBox="0 0 24 24"><path d="M9 11l3 3 8-8M20 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></symbol>
+</svg>
+
+<header class="appbar">
+  <div class="brand">
+    <span class="logo"><svg class="ic" aria-hidden="true"><use href="#i-box"/></svg></span>
+    <div><h1>Skill Builder</h1><p>แบบฟอร์มสร้าง skill ให้ AI agent</p></div>
+  </div>
+  <span class="status" id="saveSt" role="status" tabindex="0"></span>
+  <div class="bar-acts">
+    <button type="button" class="ghost" id="openDraft" data-tip="เปิดไฟล์ร่าง .json ที่เคยบันทึกไว้ เพื่อทำต่อจากเดิม (ข้อมูลในฟอร์มตอนนี้จะถูกแทนที่)"><svg class="ic" aria-hidden="true"><use href="#i-open"/></svg>เปิดร่าง</button>
+    <button type="button" id="saveDraft" hidden data-tip="บันทึกทุกช่องที่กรอกไว้เป็นไฟล์ .json เก็บไว้ในเครื่อง เปิดทำต่อได้ทุกเมื่อ ทุกเครื่อง"><svg class="ic" aria-hidden="true"><use href="#i-save"/></svg>บันทึกร่าง</button>
+    <button type="button" class="acc" id="dlZip" hidden data-tip="ได้ไฟล์ .zip ที่มีโฟลเดอร์ชื่อเดียวกับ name และ SKILL.md อยู่ข้างใน อัปโหลดเข้า Claude (Settings › Capabilities › Skills) หรือแตกไฟล์ไปวางในโฟลเดอร์ skills ของ agent ได้ทันที"><svg class="ic" aria-hidden="true"><use href="#i-dl"/></svg>ดาวน์โหลด .zip</button>
+    <input type="file" id="draftFile" accept=".json,application/json" hidden>
+  </div>
+</header>
+
+<div class="shell">
+<aside class="steps" aria-label="ความคืบหน้า">
+  <div class="prog">
+    <div class="prog-top"><b id="pct">0%</b><small id="pctT"></small></div>
+    <div class="track" aria-hidden="true"><i id="barI"></i></div>
+  </div>
+  <ol id="nav"></ol>
+  <div class="tools">
+    <button type="button" class="ghost" id="sample" data-tip="ใส่ข้อมูลตัวอย่าง (skill สรุป Headcount) ไว้ดูเป็นแนวทาง ข้อมูลที่กรอกอยู่จะถูกแทนที่"><svg class="ic" aria-hidden="true"><use href="#i-spark"/></svg>ตัวอย่าง</button>
+    <button type="button" class="ghost" id="clear" data-tip="ล้างทุกช่องเพื่อเริ่ม skill ใหม่ (กด 2 ครั้งเพื่อยืนยัน)"><svg class="ic" aria-hidden="true"><use href="#i-reset"/></svg>ล้างฟอร์ม</button>
+  </div>
+</aside>
+
+<form id="f" autocomplete="off" onsubmit="return false">
+<p class="why" style="margin:0 0 14px">ชี้หรือแตะไอคอน <svg class="ic" style="width:15px;height:15px;vertical-align:-3px" aria-hidden="true"><use href="#i-info"/></svg> ข้างชื่อช่องเพื่อดูว่าต้องกรอกอะไร · <i style="color:var(--smpc)">ตัวเอียงสีจาง</i> คือข้อมูลตัวอย่าง พิมพ์ทับได้เลย</p>
+
+<section id="s-id"><div class="sh"><svg class="ic" aria-hidden="true"><use href="#i-id"/></svg><div><h2>ตัวตนของ skill</h2><p class="why">agent ใช้ชื่อและคำอธิบายนี้ตัดสินใจว่าจะหยิบ skill นี้มาใช้หรือไม่ จึงสำคัญที่สุดในฟอร์ม</p></div></div>
+  <div class="row2">
+    <div><label for="name">ชื่อ skill <small>a-z 0-9 และ - ไม่เกิน 64 ตัว</small></label><input id="name" data-k="name" class="mono" aria-describedby="nameErr" spellcheck="false"><p class="err" id="nameErr" hidden></p></div>
+    <div><label for="title">ชื่อแสดงผล</label><input id="title" data-k="title"></div>
+  </div>
+  <div class="row2">
+    <div><label for="version">เวอร์ชัน</label><input id="version" data-k="version" class="mono"></div>
+    <div><label for="author">ผู้ดูแล</label><input id="author" data-k="author"></div>
+  </div>
+  <label for="desc">skill นี้ทำอะไร <small>1–2 ประโยค เน้นผลลัพธ์</small></label><textarea id="desc" data-k="desc"></textarea>
+  <label for="triggers">ใช้เมื่อไหร่ <small>คำที่ผู้ใช้พิมพ์ คั่นด้วย ,</small></label><textarea id="triggers" data-k="triggers"></textarea>
+  <label for="notTriggers">ห้ามใช้เมื่อไหร่ <small>กันหยิบผิด skill</small></label><textarea id="notTriggers" data-k="notTriggers"></textarea>
+  <div class="cnt" id="descCnt" aria-live="polite"></div>
+</section>
+
+<section id="s-goal"><div class="sh"><svg class="ic" aria-hidden="true"><use href="#i-target"/></svg><div><h2>เป้าหมายและขอบเขต</h2><p class="why">บอกให้ชัดว่างานจบตรงไหน agent จะไม่ทำเกินหรือทำขาด</p></div></div>
+  <label for="purpose">เป้าหมายหลัก / ปัญหาที่แก้</label><textarea id="purpose" data-k="purpose"></textarea>
+  <label for="audience">ผลงานนี้ส่งให้ใคร <small>ระดับความรู้ ภาษา น้ำเสียง</small></label><input id="audience" data-k="audience">
+  <div class="row2">
+    <div><label for="inScope">ทำ <small>บรรทัดละข้อ</small></label><textarea id="inScope" data-k="inScope"></textarea></div>
+    <div><label for="outScope">ไม่ทำ <small>บรรทัดละข้อ</small></label><textarea id="outScope" data-k="outScope"></textarea></div>
+  </div>
+</section>
+
+<section id="s-in"><div class="sh"><svg class="ic" aria-hidden="true"><use href="#i-in"/></svg><div><h2>ข้อมูลนำเข้า</h2><p class="why">ต้องได้อะไรจากผู้ใช้ก่อนเริ่มงาน และถ้าขาดให้ทำอย่างไร</p></div></div>
+  <div data-r="inputs"></div>
+  <label for="ask">ถ้าข้อมูลจำเป็นขาด ให้ agent…</label><textarea id="ask" data-k="ask"></textarea>
+</section>
+
+<section id="s-step"><div class="sh"><svg class="ic" aria-hidden="true"><use href="#i-list"/></svg><div><h2>ขั้นตอนการทำงาน</h2><p class="why">เรียงลำดับ บอกทั้งทำอะไร และต้องตรวจอะไรก่อนไปขั้นต่อไป</p></div></div>
+  <div data-r="steps"></div>
+</section>
+
+<section id="s-out"><div class="sh"><svg class="ic" aria-hidden="true"><use href="#i-out"/></svg><div><h2>รูปแบบผลลัพธ์</h2><p class="why">ยิ่งระบุละเอียด ผลยิ่งออกมาเหมือนกันทุกครั้ง</p></div></div>
+  <div class="row2">
+    <div><label for="outFormat">ชนิดไฟล์ / รูปแบบ</label><input id="outFormat" data-k="outFormat"></div>
+    <div><label for="outLang">ภาษาและน้ำเสียง</label><input id="outLang" data-k="outLang"></div>
+  </div>
+  <label for="outName">การตั้งชื่อไฟล์ / ความยาว</label><input id="outName" data-k="outName">
+  <label for="outTpl">โครงสร้าง / template ของผลลัพธ์</label><textarea id="outTpl" data-k="outTpl" class="mono" style="min-height:150px"></textarea>
+</section>
+
+<section id="s-rule"><div class="sh"><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg><div><h2>กฎและข้อห้าม</h2><p class="why">สิ่งที่ต้องทำและห้ามทำแบบเด็ดขาด ใส่เหตุผลกำกับจะช่วยให้ agent ตัดสินใจถูกในกรณีที่ไม่ได้เขียนไว้</p></div></div>
+  <div class="row2">
+    <div><label for="must">ต้องทำเสมอ <small>บรรทัดละข้อ</small></label><textarea id="must" data-k="must"></textarea></div>
+    <div><label for="never">ห้ามทำเด็ดขาด <small>บรรทัดละข้อ</small></label><textarea id="never" data-k="never"></textarea></div>
+  </div>
+  <label for="env">ข้อจำกัดของสภาพแวดล้อม <small>เครื่องมือที่มี/ไม่มี สิทธิ์ เวอร์ชัน</small></label><textarea id="env" data-k="env"></textarea>
+</section>
+
+<section id="s-ex"><div class="sh"><svg class="ic" aria-hidden="true"><use href="#i-chat"/></svg><div><h2>ตัวอย่าง</h2><p class="why">ตัวอย่างจริง 1–3 ชุด สอน agent ได้ดีกว่าคำอธิบายยาวๆ</p></div></div>
+  <div data-r="examples"></div>
+</section>
+
+<section id="s-edge"><div class="sh"><svg class="ic" aria-hidden="true"><use href="#i-warn"/></svg><div><h2>กรณีพิเศษและข้อผิดพลาด</h2><p class="why">จุดที่ agent มักพลาด เช่น ข้อมูลว่าง ค่าแปลก ไฟล์ผิดรูปแบบ</p></div></div>
+  <div data-r="edges"></div>
+</section>
+
+<section id="s-know"><div class="sh"><svg class="ic" aria-hidden="true"><use href="#i-book"/></svg><div><h2>ความรู้เฉพาะทาง</h2><p class="why">คำศัพท์และนิยามขององค์กรที่ agent ไม่มีทางรู้เอง และไฟล์ประกอบในโฟลเดอร์ skill</p></div></div>
+  <label>คำศัพท์เฉพาะ</label>
+  <div data-r="glossary"></div>
+  <label>ไฟล์ประกอบ <small>scripts/ references/ assets/</small></label>
+  <div data-r="files"></div>
+</section>
+
+<section id="s-qa"><div class="sh"><svg class="ic" aria-hidden="true"><use href="#i-test"/></svg><div><h2>ตรวจงานก่อนส่ง</h2><p class="why">นิยามว่างานเสร็จคืออะไร ให้ agent เช็กตัวเองก่อนตอบ และชุดคำสั่งไว้ทดสอบ skill</p></div></div>
+  <label for="check">Checklist ก่อนส่งงาน <small>บรรทัดละข้อ</small></label><textarea id="check" data-k="check"></textarea>
+  <label>คำสั่งทดสอบ</label>
+  <div data-r="tests"></div>
+</section>
+</form>
+
+<aside class="side" aria-label="ไฟล์ผลลัพธ์">
+  <div class="panel">
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" aria-selected="true" data-tab="skill"><svg class="ic" aria-hidden="true"><use href="#i-file"/></svg>SKILL.md</button>
+      <button type="button" role="tab" aria-selected="false" data-tab="evals"><svg class="ic" aria-hidden="true"><use href="#i-test"/></svg>evals.md</button>
+      <button type="button" role="tab" aria-selected="false" data-tab="tree"><svg class="ic" aria-hidden="true"><use href="#i-open"/></svg>โครงสร้างโฟลเดอร์</button>
+    </div>
+    <pre id="pv" tabindex="0" aria-label="ตัวอย่างไฟล์"></pre>
+    <div class="pacts">
+      <button type="button" class="pri" id="copy"><svg class="ic" aria-hidden="true"><use href="#i-copy"/></svg>Copy ไฟล์นี้</button>
+      <button type="button" id="dlOne" hidden data-tip="ดาวน์โหลดเฉพาะไฟล์ที่เปิดอยู่ในแท็บตอนนี้"><svg class="ic" aria-hidden="true"><use href="#i-dl"/></svg>ดาวน์โหลดไฟล์นี้</button>
+    </div>
+  </div>
+  <div class="ready">
+    <h3>ความพร้อมก่อนนำเข้า <span id="readyN"></span></h3>
+    <ul class="checks" id="checks"></ul>
+  </div>
+  <p class="hint">วิธีใช้: สร้างโฟลเดอร์ชื่อเดียวกับ name แล้ววาง <code>SKILL.md</code> ไว้ข้างใน ใช้ได้กับ Claude Skills และ agent ที่อ่าน Markdown พร้อม YAML frontmatter</p>
+</aside>
+</div>
+<div class="toast" id="toast" role="status"></div>
+<div id="tip" role="tooltip"></div>
+<script>
+{
+const R={
+ inputs:{add:'+ เพิ่มข้อมูลนำเข้า',f:[['n','ชื่อข้อมูล เช่น ไฟล์ Excel พนักงาน','t'],['r','','s',['จำเป็น','ไม่บังคับ']],['d','รูปแบบ / คอลัมน์ / ตัวอย่างค่า','t']]},
+ steps:{add:'+ เพิ่มขั้นตอน',f:[['t','ชื่อขั้นตอน','t'],['d','ทำอะไร อย่างไร และตรวจอะไรก่อนไปต่อ','a']]},
+ examples:{add:'+ เพิ่มตัวอย่าง',f:[['i','ผู้ใช้พิมพ์ว่า…','a'],['o','agent ควรทำ / ตอบว่า…','a']]},
+ edges:{add:'+ เพิ่มกรณีพิเศษ',f:[['c','ถ้าเกิด…','t'],['a','ให้ทำ…','t']]},
+ glossary:{add:'+ เพิ่มคำศัพท์',f:[['t','คำศัพท์','t'],['d','ความหมายในองค์กรเรา','t']]},
+ files:{add:'+ เพิ่มไฟล์ประกอบ',f:[['p','path เช่น references/columns.md','t'],['u','ใช้ทำอะไร / ให้อ่านเมื่อไหร่','t']]},
+ tests:{add:'+ เพิ่มคำสั่งทดสอบ',f:[['p','prompt ทดสอบ','t'],['k','','s',['ควร trigger','ไม่ควร trigger']],['e','ผลที่คาดหวัง','t']]}
+};
+const TIPS={
+ name:'ชื่อสำหรับระบบ และเป็นชื่อโฟลเดอร์ด้วย ใช้ภาษาอังกฤษพิมพ์เล็ก ตัวเลข และขีดกลางเท่านั้น เช่น hr-headcount-summary ห้ามเว้นวรรค ห้ามมีคำว่า claude / anthropic',
+ title:'ชื่อที่คนอ่านแล้วเข้าใจ ใช้เป็นหัวเรื่องในไฟล์ เขียนภาษาไทยได้ เช่น “สรุป Headcount รายเดือน”',
+ version:'เลขเวอร์ชันไว้ติดตามการแก้ไข เช่น 1.0.0 → แก้เล็กน้อยเป็น 1.0.1 → เพิ่มความสามารถเป็น 1.1.0',
+ author:'คนหรือทีมที่ดูแล skill นี้ ไว้รู้ว่าถ้ามีปัญหาต้องถามใคร',
+ desc:'บอก 1–2 ประโยคว่า skill นี้ทำอะไร ได้ผลลัพธ์อะไร เขียนให้เจาะจง เช่น “สรุป HC จากไฟล์ Excel แยกบริษัท เทียบแผน” ดีกว่า “ช่วยงาน HR”',
+ triggers:'คำหรือประโยคที่ผู้ใช้มักพิมพ์ตอนต้องการงานนี้ ยิ่งหลากหลายยิ่งดี ใส่คำย่อหรือศัพท์ที่ทีมใช้จริงด้วย เช่น HC, กำลังคน, จำนวนพนักงาน — คั่นด้วยเครื่องหมาย ,',
+ notTriggers:'งานที่คล้ายกันแต่ไม่ใช่ skill นี้ ช่วยกัน agent หยิบผิดตัว เช่น skill สรุป HC ไม่ควรใช้ตอนผู้ใช้ถามเงินเดือนรายคน',
+ purpose:'ทำ skill นี้เพื่อแก้ปัญหาอะไร หรือได้ประโยชน์อะไร agent จะใช้ข้อนี้ช่วยตัดสินใจในสถานการณ์ที่ไม่ได้เขียนกฎไว้',
+ audience:'ใครจะเป็นคนอ่านหรือใช้ผลงาน เช่น ผู้บริหาร / ทีมงาน / ลูกค้า ข้อนี้ช่วยกำหนดระดับภาษาและความละเอียด',
+ inScope:'รายการงานที่ skill นี้ต้องทำ เขียนบรรทัดละ 1 ข้อ',
+ outScope:'สิ่งที่ไม่ต้องทำแม้ผู้ใช้จะขอ agent จะบอกผู้ใช้ว่าอยู่นอกขอบเขต แทนที่จะทำเกินหน้าที่ เขียนบรรทัดละ 1 ข้อ',
+ ask:'ถ้าผู้ใช้ไม่ได้ให้ข้อมูลที่จำเป็น agent ควรทำอะไร เช่น ถามกลับทีละข้อ / ใช้ค่าเริ่มต้นที่กำหนด / หยุดทำและแจ้ง',
+ outFormat:'ผลลัพธ์ออกมาเป็นอะไร เช่น ไฟล์ .xlsx, ข้อความในแชท, ตาราง, โค้ด VBA, ไฟล์ HTML 1 ไฟล์',
+ outLang:'ภาษาและน้ำเสียงของผลลัพธ์ เช่น ไทยทางการ / ไทยเป็นกันเอง / อังกฤษ',
+ outName:'รูปแบบชื่อไฟล์และความยาว เช่น HC_Summary_YYYY-MM.xlsx หรือ “ไม่เกิน 1 หน้า A4”',
+ outTpl:'หน้าตาผลลัพธ์ที่ต้องการ วางโครงหัวข้อ ตาราง หรือคอลัมน์ไว้ให้ agent ทำตาม ยิ่งชัดเท่าไร ผลยิ่งออกมาเหมือนกันทุกครั้ง',
+ must:'สิ่งที่ต้องทำทุกครั้ง บรรทัดละข้อ ถ้าใส่เหตุผลสั้นๆ ด้วยจะดีมาก เช่น “แจ้งแถวที่ตัดออก เพราะผู้บริหารต้องเชื่อตัวเลขได้”',
+ never:'สิ่งที่ห้ามทำเด็ดขาด บรรทัดละข้อ เช่น ห้ามแต่งตัวเลขขึ้นเอง ห้ามเปิดเผยข้อมูลส่วนบุคคล',
+ env:'ข้อจำกัดของเครื่องมือหรือระบบ เช่น ติดตั้งโปรแกรมไม่ได้ ใช้ได้แค่ Excel ไม่มีอินเทอร์เน็ต agent จะได้ไม่เสนอวิธีที่ใช้จริงไม่ได้',
+ check:'สิ่งที่ agent ต้องตรวจเองก่อนส่งงาน บรรทัดละข้อ เช่น ผลรวมตรงกัน ชื่อไฟล์ถูกรูปแบบ ไม่มีข้อมูลส่วนบุคคลหลุด'};
+const RT={
+ inputs:{n:'ชื่อข้อมูลที่ต้องได้จากผู้ใช้ เช่น ไฟล์ Excel พนักงาน, เดือนที่ต้องการสรุป',r:'จำเป็น = ถ้าไม่มีจะทำงานไม่ได้ · ไม่บังคับ = มีก็ดี ไม่มีก็ทำต่อได้',d:'รูปแบบที่คาดหวัง เช่น คอลัมน์ที่ต้องมี รูปแบบวันที่ หรือตัวอย่างค่า'},
+ steps:{t:'ชื่อสั้นๆ ของขั้นตอน เช่น “ตรวจข้อมูล”',d:'อธิบายว่าทำอะไร ทำอย่างไร และต้องตรวจอะไรก่อนไปขั้นถัดไป'},
+ examples:{i:'ตัวอย่างข้อความที่ผู้ใช้พิมพ์จริง',o:'สิ่งที่ agent ควรทำหรือตอบในกรณีนั้น เขียนเป็นลำดับขั้นได้ เช่น ตรวจ → แจ้ง → ส่งไฟล์'},
+ edges:{c:'สถานการณ์ผิดปกติ เช่น ไฟล์ว่าง คอลัมน์หาย ข้อมูลซ้ำ ค่าติดลบ',a:'วิธีรับมือ เช่น แจ้งผู้ใช้ ข้ามแถวนั้น หรือหยุดแล้วถาม'},
+ glossary:{t:'คำย่อหรือศัพท์เฉพาะขององค์กร',d:'ความหมายที่ทีมใช้จริง รวมเงื่อนไขด้วย เช่น “นับเฉพาะ Active ไม่รวม outsource”'},
+ files:{p:'ตำแหน่งไฟล์ในโฟลเดอร์ skill · scripts/ = โค้ดที่รันได้ · references/ = เอกสารอ่านประกอบ · assets/ = template หรือรูป',u:'ไฟล์นี้ใช้ทำอะไร และให้ agent เปิดอ่านเมื่อไหร่ (agent จะเปิดเฉพาะตอนจำเป็น ช่วยให้ SKILL.md สั้น)'},
+ tests:{p:'คำสั่งที่จะลองพิมพ์เพื่อทดสอบ skill',k:'ควร trigger = agent ต้องใช้ skill นี้ · ไม่ควร trigger = agent ต้องไม่ใช้',e:'ผลที่คาดว่าจะได้ ไว้เทียบตอนทดสอบจริง'}};
+const SAMPLE={name:'hr-headcount-summary',title:'สรุป Headcount รายเดือน',version:'1.0.0',author:'ทีม HR Analytics',
+desc:'สรุปจำนวนพนักงาน (Headcount) รายเดือนจากไฟล์ Excel แยกตามบริษัท/หน่วยงาน พร้อมเทียบกับแผน (Plan) และเดือนก่อน แล้วสร้างตารางสรุปสำหรับผู้บริหาร',
+triggers:'สรุป headcount, จำนวนพนักงานเดือนนี้, HC เทียบแผน, รายงานกำลังคน, พนักงานเข้า-ออก',
+notTriggers:'คำนวณเงินเดือนรายคน, คำถามนโยบาย HR ทั่วไป, การพยากรณ์ PE 3 ปี',
+purpose:'ลดเวลาทำรายงาน HC รายเดือนจาก 1 วันเหลือไม่กี่นาที และให้ตัวเลขตรงกันทุกครั้ง',
+audience:'ผู้บริหารฝ่าย HR — ภาษาไทยทางการ กระชับ เน้นตัวเลข',
+inScope:'นับ HC แยกบริษัท/หน่วยงาน\nเทียบ Actual vs Plan และเดือนก่อน\nสรุปคนเข้า-ออก',
+outScope:'แก้ไขข้อมูลต้นทาง\nวิเคราะห์เงินเดือนรายบุคคล',
+inputs:[{n:'ไฟล์ Excel ข้อมูลพนักงาน',r:'จำเป็น',d:'คอลัมน์ EmpID, Company, Dept, Status, HireDate, TermDate'},{n:'ไฟล์แผน HC',r:'ไม่บังคับ',d:'Company, Dept, Month, PlanHC'},{n:'เดือนที่ต้องการสรุป',r:'จำเป็น',d:'เช่น 2026-10'}],
+ask:'ถามผู้ใช้ทีละข้อเฉพาะสิ่งที่ขาด ห้ามเดาเดือนหรือสร้างตัวเลขขึ้นเอง',
+steps:[{t:'ตรวจข้อมูล',d:'เช็กว่ามีคอลัมน์ครบ, EmpID ไม่ซ้ำ, วันที่อ่านได้ ถ้าไม่ผ่านให้แจ้งรายการที่ผิดก่อน'},{t:'นับ Headcount',d:'นับเฉพาะ Status = Active ณ วันสุดท้ายของเดือน แยก Company > Dept'},{t:'เทียบแผนและเดือนก่อน',d:'คำนวณส่วนต่างเป็นจำนวนและ % ปัดทศนิยม 1 ตำแหน่ง'},{t:'สร้างรายงาน',d:'จัดตามโครงสร้าง Output แล้วรัน checklist ก่อนส่ง'}],
+outFormat:'ไฟล์ .xlsx 2 ชีต: Summary, Detail',outLang:'ไทย ทางการ',outName:'HC_Summary_YYYY-MM.xlsx',
+outTpl:'ชีต Summary:\n| บริษัท | HC จริง | แผน | ส่วนต่าง | % | เดือนก่อน |\nแถวสุดท้าย = รวมทั้งหมด\n\nใต้ตาราง: สรุป 3 bullet สิ่งที่ผู้บริหารควรรู้',
+must:'ใช้ข้อมูลจากไฟล์ที่ผู้ใช้ให้เท่านั้น\nแสดงจำนวนแถวที่ถูกตัดออกพร้อมเหตุผล\nตัวเลขรวมต้องเท่ากับผลรวมรายบริษัท',
+never:'ห้ามแสดงชื่อหรือเงินเดือนรายบุคคลในหน้า Summary\nห้ามสร้างตัวเลขแผนขึ้นเองถ้าไม่มีไฟล์แผน',
+env:'เครื่องผู้ใช้ติดตั้งโปรแกรมเพิ่มไม่ได้ — ใช้ได้เฉพาะ Excel สูตร, Power Query, VBA',
+examples:[{i:'ช่วยสรุป HC เดือน ต.ค. 2026 จากไฟล์นี้หน่อย',o:'ตรวจข้อมูล → แจ้งว่าพบ EmpID ซ้ำ 3 แถว (ตัดออก) → ส่งไฟล์ HC_Summary_2026-10.xlsx พร้อมสรุป 3 bullet'}],
+edges:[{c:'ไม่มีไฟล์แผน',a:'ทำรายงานได้ แต่ซ่อนคอลัมน์แผน/ส่วนต่าง และแจ้งผู้ใช้'},{c:'TermDate อยู่ในเดือนที่สรุป',a:'นับว่าออกแล้ว ไม่รวมใน HC สิ้นเดือน'}],
+glossary:[{t:'HC',d:'Headcount พนักงาน Active ณ สิ้นเดือน ไม่รวมพนักงาน outsource'},{t:'BU',d:'Business Unit หรือบริษัทในเครือ'}],
+files:[{p:'references/columns.md',u:'ความหมายของแต่ละคอลัมน์ — อ่านเมื่อเจอชื่อคอลัมน์ไม่ตรง'},{p:'assets/HC_template.xlsx',u:'template รายงาน ใช้ทุกครั้งที่สร้างไฟล์'}],
+check:'ผลรวมทุกบริษัท = ยอดรวม\nไม่มีข้อมูลรายบุคคลในชีต Summary\nชื่อไฟล์ตรงรูปแบบ\nแจ้งแถวที่ตัดออกแล้ว',
+tests:[{p:'สรุปจำนวนพนักงานเดือนกันยาให้หน่อย',k:'ควร trigger',e:'ถามหาไฟล์ข้อมูลถ้ายังไม่แนบ'},{p:'เงินเดือนนาย ก. เท่าไหร่',k:'ไม่ควร trigger',e:'ไม่ใช้ skill นี้'}]};
+const EMPTY=()=>{const o={};for(const k in SAMPLE)o[k]=Array.isArray(SAMPLE[k])?[]:'';o.version='1.0.0';return o};
+const KEY='skillform-v1';
+let st;try{st=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+if(!st||typeof st!=='object')st=JSON.parse(JSON.stringify(SAMPLE));
+for(const k in SAMPLE)if(st[k]==null)st[k]=Array.isArray(SAMPLE[k])?[]:'';
+const $=s=>document.querySelector(s),f=$('#f');
+const ic=id=>`<svg class="ic" aria-hidden="true"><use href="#i-${id}"/></svg>`;
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const lines=s=>String(s||'').split('\n').map(x=>x.trim()).filter(Boolean);
+const full=o=>Object.values(o).some(v=>String(v||'').trim()&&!['จำเป็น','ไม่บังคับ','ควร trigger','ไม่ควร trigger'].includes(v));
+const rows=k=>st[k].filter(full);
+let tab='skill',saveT;
+
+// วาดรายการที่เพิ่ม/ลบได้ (input, ขั้นตอน, ตัวอย่าง ฯลฯ)
+function renderRep(k){
+  const box=f.querySelector(`[data-r="${k}"]`),c=R[k];
+  box.innerHTML=st[k].map((it,i)=>`<div class="item"><div class="h"><span>รายการที่ ${i+1}</span><button type="button" data-del="${k}" data-i="${i}" aria-label="ลบรายการที่ ${i+1}">${ic('trash')}ลบ</button></div>${c.f.map(([n,ph,t,op])=>{const tp=`data-tip="${esc(RT[k][n]||'')}"`;return(
+    t==='s'?`<select data-rk="${k}" data-i="${i}" data-f="${n}" ${tp} aria-label="ประเภท">${op.map(o=>`<option${it[n]===o?' selected':''}>${o}</option>`).join('')}</select>`
+    :t==='a'?`<textarea data-rk="${k}" data-i="${i}" data-f="${n}" ${tp} placeholder="${esc(ph)}" aria-label="${esc(ph)}">${esc(it[n])}</textarea>`
+    :`<input data-rk="${k}" data-i="${i}" data-f="${n}" ${tp} placeholder="${esc(ph)}" aria-label="${esc(ph)}" value="${esc(it[n])}">`)}).join('')}</div>`).join('')
+    +`<button type="button" class="add" data-add="${k}">${ic('plus')}${c.add.replace(/^\+\s*/,'')}</button>`;
+}
+function fill(){
+  f.querySelectorAll('[data-k]').forEach(el=>el.value=st[el.dataset.k]||'');
+  for(const k in R)renderRep(k);
+  update();
+}
+function descText(){
+  let d=st.desc.trim();
+  if(st.triggers.trim())d+=(d?' ':'')+'ใช้เมื่อ: '+st.triggers.trim();
+  if(st.notTriggers.trim())d+=' ไม่ใช้เมื่อ: '+st.notTriggers.trim();
+  return d.replace(/\s*\n\s*/g,' ');
+}
+const yq=s=>'"'+s.replace(/\\/g,'\\\\').replace(/"/g,'\\"')+'"';
+const bl=s=>lines(s).map(x=>'- '+x).join('\n');
+// สร้างเนื้อหา SKILL.md จากข้อมูลในฟอร์ม
+function skillMd(){
+  const o=[],add=(h,b)=>{if(b&&b.trim())o.push('## '+h+'\n\n'+b.trim()+'\n')};
+  o.push(`---\nname: ${st.name.trim()||'my-skill'}\ndescription: ${yq(descText())}\n---\n`);
+  o.push('# '+(st.title.trim()||st.name.trim()||'ชื่อ skill')+'\n');
+  const meta=[st.version&&'เวอร์ชัน '+st.version.trim(),st.author&&'ผู้ดูแล: '+st.author.trim()].filter(Boolean).join(' · ');
+  if(meta)o.push('> '+meta+'\n');
+  add('เป้าหมาย',[st.purpose.trim(),st.audience.trim()&&'**ผู้รับผลงาน:** '+st.audience.trim()].filter(Boolean).join('\n\n'));
+  add('ขอบเขต',[lines(st.inScope).length&&'**ทำ**\n'+bl(st.inScope),lines(st.outScope).length&&'**ไม่ทำ** (ถ้าผู้ใช้ขอ ให้แจ้งว่าอยู่นอกขอบเขต)\n'+bl(st.outScope)].filter(Boolean).join('\n\n'));
+  const ins=rows('inputs');
+  add('ข้อมูลนำเข้า',(ins.length?'| ข้อมูล | สถานะ | รูปแบบ / หมายเหตุ |\n|---|---|---|\n'+ins.map(x=>`| ${x.n||'-'} | ${x.r||'-'} | ${(x.d||'-').replace(/\|/g,'/')} |`).join('\n'):'')+(st.ask.trim()?'\n\n**ถ้าข้อมูลจำเป็นขาด:** '+st.ask.trim():''));
+  add('ขั้นตอนการทำงาน',rows('steps').map((x,i)=>`${i+1}. **${x.t||'ขั้นตอน'}** — ${(x.d||'').replace(/\n/g,' ')}`).join('\n'));
+  add('รูปแบบผลลัพธ์',[st.outFormat.trim()&&'- รูปแบบ: '+st.outFormat.trim(),st.outLang.trim()&&'- ภาษา/น้ำเสียง: '+st.outLang.trim(),st.outName.trim()&&'- ชื่อไฟล์/ความยาว: '+st.outName.trim()].filter(Boolean).join('\n')+(st.outTpl.trim()?'\n\nโครงสร้าง:\n\n```\n'+st.outTpl.trim()+'\n```':''));
+  add('กฎที่ต้องทำเสมอ',bl(st.must));
+  add('ข้อห้าม',bl(st.never));
+  add('ข้อจำกัดของสภาพแวดล้อม',bl(st.env));
+  add('ตัวอย่าง',rows('examples').map((x,i)=>`### ตัวอย่างที่ ${i+1}\n**ผู้ใช้:** ${x.i||'-'}\n\n**สิ่งที่ควรทำ:** ${x.o||'-'}`).join('\n\n'));
+  add('กรณีพิเศษและการจัดการข้อผิดพลาด',rows('edges').map(x=>`- ถ้า${x.c||'…'} → ${x.a||'…'}`).join('\n'));
+  add('คำศัพท์เฉพาะ',rows('glossary').map(x=>`- **${x.t||'-'}**: ${x.d||'-'}`).join('\n'));
+  add('ไฟล์ประกอบ',rows('files').map(x=>`- \`${x.p||'-'}\` — ${x.u||'-'}`).join('\n'));
+  add('ตรวจก่อนส่งงาน',lines(st.check).map(x=>'- [ ] '+x).join('\n'));
+  return o.join('\n');
+}
+function evalsMd(){
+  const t=rows('tests');
+  return `# ชุดทดสอบ: ${st.name||'my-skill'}\n\nใช้ทดสอบว่า agent หยิบ skill ถูกจังหวะและได้ผลตามคาด (ไม่ต้องใส่ในโฟลเดอร์ skill ก็ได้)\n\n`+(t.length?t.map((x,i)=>`## ${i+1}. ${x.k}\n- Prompt: ${x.p||'-'}\n- คาดหวัง: ${x.e||'-'}`).join('\n\n'):'ยังไม่มีคำสั่งทดสอบ — เพิ่มอย่างน้อย 3 ข้อ (ทั้งควรและไม่ควร trigger)');
+}
+function treeMd(){
+  const n=st.name.trim()||'my-skill',fs=rows('files').map(x=>x.p.trim()).filter(Boolean);
+  return n+'/\n├── SKILL.md'+fs.map((p,i)=>'\n'+(i===fs.length-1?'└── ':'├── ')+p).join('')+'\n\nscripts/     โค้ดที่ agent รันได้ (Python, JS ฯลฯ)\nreferences/  เอกสารอ่านประกอบเมื่อจำเป็น\nassets/      template, รูป, ไฟล์ต้นแบบ';
+}
+const SECS=[
+ ['s-id','ตัวตน','ชื่อ คำอธิบาย trigger',()=>st.name&&st.desc&&st.triggers],
+ ['s-goal','ขอบเขต','เป้าหมาย ทำ/ไม่ทำ',()=>st.purpose&&(st.inScope||st.outScope)],
+ ['s-in','ข้อมูลนำเข้า','สิ่งที่ต้องได้จากผู้ใช้',()=>rows('inputs').length],
+ ['s-step','ขั้นตอน','ลำดับการทำงาน',()=>rows('steps').length>=2],
+ ['s-out','ผลลัพธ์','รูปแบบและ template',()=>st.outFormat&&st.outTpl],
+ ['s-rule','กฎ','ต้องทำ ห้ามทำ ข้อจำกัด',()=>st.must||st.never],
+ ['s-ex','ตัวอย่าง','input → output',()=>rows('examples').length],
+ ['s-edge','กรณีพิเศษ','ข้อผิดพลาดที่พบบ่อย',()=>rows('edges').length],
+ ['s-know','ความรู้','คำศัพท์ ไฟล์ประกอบ',()=>rows('glossary').length||rows('files').length],
+ ['s-qa','ตรวจงาน','checklist และทดสอบ',()=>st.check&&rows('tests').length]];
+const nameProblem=()=>{const n=st.name.trim();
+  if(!n)return 'กรอกชื่อ skill';
+  if(n.length>64)return 'ยาวเกิน 64 ตัวอักษร';
+  if(!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(n))return 'ใช้ได้เฉพาะ a-z, 0-9 และขีดกลาง (ห้ามเว้นวรรค ตัวใหญ่ หรือภาษาไทย)';
+  if(/claude|anthropic/.test(n))return 'ห้ามมีคำว่า claude หรือ anthropic';
+  return ''};
+const nameOk=()=>!nameProblem();
+function checks(){
+  const d=descText(),c=[];
+  c.push([nameOk(),'ชื่อ skill ถูกรูปแบบ']);
+  c.push([d.length>0&&d.length<=1024,`คำอธิบายรวมไม่เกิน 1024 ตัวอักษร (${d.length})`]);
+  c.push([!!st.triggers.trim(),'ระบุ “ใช้เมื่อไหร่” แล้ว']);
+  c.push([!/[<>]/.test(d),'คำอธิบายไม่มีเครื่องหมาย < >']);
+  c.push([rows('steps').length>=2,'มีขั้นตอนการทำงานอย่างน้อย 2 ขั้น']);
+  c.push([rows('examples').length>=1,'มีตัวอย่างจริงอย่างน้อย 1 ชุด']);
+  c.push([!!st.outFormat.trim(),'ระบุรูปแบบผลลัพธ์']);
+  c.push([rows('tests').filter(x=>x.k==='ไม่ควร trigger').length>=1,'มีคำสั่งทดสอบแบบ “ไม่ควร trigger”']);
+  c.push([skillMd().split('\n').length<=500,'SKILL.md ไม่เกิน ~500 บรรทัด']);
+  return c;
+}
+function update(){
+  const done=SECS.map(s=>!!s[3]()),n=done.filter(Boolean).length,p=Math.round(n/SECS.length*100);
+  $('#barI').style.width=p+'%';$('#pct').textContent=p+'%';$('#pctT').textContent=`ครบ ${n} จาก ${SECS.length} หมวด`;
+  $('#nav').innerHTML=SECS.map((s,i)=>`<li><a href="#${s[0]}" class="${done[i]?'done':''}"><span class="dot">${done[i]?ic('check'):''}</span><span><b>${s[1]}</b><small>${s[2]}</small></span></a></li>`).join('');
+  // แจ้งข้อผิดพลาดของชื่อใต้ช่องทันที
+  const np=nameProblem(),ne=$('#nameErr'),ni=$('#name');
+  ne.hidden=!np||!st.name.trim();ne.innerHTML=ic('alert')+esc(np);ni.setAttribute('aria-invalid',!ne.hidden);
+  const dl_=descText().length,dc=$('#descCnt');
+  dc.className='cnt'+(dl_>1024?' over':'');
+  dc.innerHTML=`<span>คำอธิบายที่ agent เห็น = ทำอะไร + ใช้เมื่อ + ห้ามใช้เมื่อ</span><span><b>${dl_}</b> / 1024</span>`;
+  $('#pv').textContent=tab==='skill'?skillMd():tab==='evals'?evalsMd():treeMd();
+  const cs=checks();
+  $('#readyN').textContent=`ผ่าน ${cs.filter(x=>x[0]).length}/${cs.length}`;
+  $('#checks').innerHTML=cs.map(([ok,m])=>`<li class="${ok?'':'no'}">${ic(ok?'check':'alert')}<span>${ok?'':'<span style="position:absolute;left:-9999px">ยังไม่ผ่าน: </span>'}${esc(m)}</span></li>`).join('');
+  // ข้อมูลตัวอย่างแสดงเป็นตัวเอียงสีจาง
+  f.querySelectorAll('[data-k]').forEach(el=>el.classList.toggle('smp',!!el.value&&el.value===SAMPLE[el.dataset.k]));
+  f.querySelectorAll('input[data-rk],textarea[data-rk]').forEach(el=>{const s=(SAMPLE[el.dataset.rk]||[])[+el.dataset.i];el.classList.toggle('smp',!!el.value&&!!s&&el.value===s[el.dataset.f])});
+  // บันทึกร่างอัตโนมัติ
+  clearTimeout(saveT);saveT=setTimeout(()=>{
+    const s=$('#saveSt');
+    try{localStorage.setItem(KEY,JSON.stringify(st));
+      const t=new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+      s.className='status okk';s.innerHTML=ic('check')+'บันทึกอัตโนมัติ '+t+' น.';
+      s.dataset.tip='ร่างถูกจำไว้ในเบราว์เซอร์นี้แล้ว ปิดแล้วเปิดใหม่จะกลับมาที่เดิม ถ้าจะย้ายเครื่องหรือกันหาย ให้กด “บันทึกร่าง” เป็นไฟล์'}
+    catch(e){s.className='status bad';s.innerHTML=ic('alert')+'จำร่างอัตโนมัติไม่ได้';
+      s.dataset.tip='เบราว์เซอร์นี้ไม่อนุญาตให้จำร่าง กด “บันทึกร่าง” ก่อนปิดหน้า เพื่อไม่ให้ข้อมูลหาย'}
+  },300);
+}
+f.addEventListener('input',e=>{
+  const t=e.target;
+  if(t.dataset.k)st[t.dataset.k]=t.value;
+  else if(t.dataset.rk)st[t.dataset.rk][+t.dataset.i][t.dataset.f]=t.value;
+  update();
+});
+f.addEventListener('change',e=>{const t=e.target;if(t.tagName==='SELECT'&&t.dataset.rk){st[t.dataset.rk][+t.dataset.i][t.dataset.f]=t.value;update()}});
+f.addEventListener('click',e=>{
+  const a=e.target.closest('[data-add]'),d=e.target.closest('[data-del]');
+  if(a){const k=a.dataset.add,o={};R[k].f.forEach(([n,,t,op])=>o[n]=t==='s'?op[0]:'');st[k].push(o);renderRep(k);update();
+    const its=f.querySelectorAll(`[data-r="${k}"] .item`);its[its.length-1]?.querySelector('input,textarea')?.focus()}
+  if(d){st[d.dataset.del].splice(+d.dataset.i,1);renderRep(d.dataset.del);update()}
+});
+document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{
+  tab=b.dataset.tab;document.querySelectorAll('[data-tab]').forEach(x=>x.setAttribute('aria-selected',x===b));update()}));
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),2200)}
+$('#copy').addEventListener('click',()=>{
+  const txt=$('#pv').textContent;
+  const fb=()=>{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand('copy')}catch(e){}ta.remove();toast(ok?'คัดลอกแล้ว':'คัดลอกไม่ได้ ลากเลือกข้อความในกล่องแทน')};
+  try{navigator.clipboard.writeText(txt).then(()=>toast('คัดลอกแล้ว'),fb)}catch(e){fb()}
+});
+
+// ดาวน์โหลด: 'claude' = เปิดใน artifact, 'native' = เปิดเป็นไฟล์ HTML เดี่ยว
+let dl=null,mode=null;
+(async()=>{
+  if(window.claude&&window.claude.use){try{dl=await window.claude.use('downloads')}catch(e){dl=null}mode=dl?'claude':null}
+  else mode='native';
+  if(mode)['dlZip','dlOne','saveDraft'].forEach(id=>$('#'+id).hidden=false);
+})();
+// สร้างไฟล์ .zip เอง (ไม่บีบอัด) ไม่ต้องพึ่ง library จากอินเทอร์เน็ต
+const CRC=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+const crc32=b=>{let c=0xFFFFFFFF;for(let i=0;i<b.length;i++)c=CRC[(c^b[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0};
+function makeZip(files){
+  const enc=new TextEncoder(),parts=[],cen=[];let off=0;
+  const d=new Date(),dt=((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate(),tm=(d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1);
+  for(const fl of files){
+    const nm=enc.encode(fl.name),data=enc.encode(fl.data),crc=crc32(data);
+    const h=new DataView(new ArrayBuffer(30));
+    h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x0800,true);h.setUint16(10,tm,true);h.setUint16(12,dt,true);
+    h.setUint32(14,crc,true);h.setUint32(18,data.length,true);h.setUint32(22,data.length,true);h.setUint16(26,nm.length,true);
+    parts.push(h.buffer,nm,data);
+    const c=new DataView(new ArrayBuffer(46));
+    c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0x0800,true);c.setUint16(12,tm,true);c.setUint16(14,dt,true);
+    c.setUint32(16,crc,true);c.setUint32(20,data.length,true);c.setUint32(24,data.length,true);c.setUint16(28,nm.length,true);c.setUint32(42,off,true);
+    cen.push(c.buffer,nm);off+=30+nm.length+data.length;
+  }
+  const cs=cen.reduce((a,b)=>a+b.byteLength,0),e=new DataView(new ArrayBuffer(22));
+  e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,cs,true);e.setUint32(16,off,true);
+  return new Blob([...parts,...cen,e.buffer],{type:'application/zip'});
+}
+const DLMSG={declined:'ยกเลิกการดาวน์โหลดแล้ว',rate_limited:'มีหน้าต่างยืนยันค้างอยู่ ลองใหม่อีกครั้ง',host_unavailable:'แอปนี้บันทึกไฟล์ไม่ได้ เปิดในเบราว์เซอร์บนคอมพิวเตอร์แทน'};
+async function save(filename,data){
+  if(mode==='native'){
+    const blob=data instanceof Blob?data:new Blob([data],{type:'text/plain;charset=utf-8'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;
+    document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);
+    toast('ดาวน์โหลดแล้ว: '+filename);return;
+  }
+  try{const r=await dl.save({filename,data});if(r.status==='saved')toast('ดาวน์โหลดแล้ว: '+filename)}
+  catch(e){toast(DLMSG[e&&e.code]||'ดาวน์โหลดไม่ได้ ใช้ปุ่ม Copy แทน')}
+}
+$('#dlOne').addEventListener('click',()=>{if(!mode)return;save(tab==='skill'?'SKILL.md':tab==='evals'?'evals.md':'folder-structure.txt',$('#pv').textContent)});
+$('#dlZip').addEventListener('click',()=>{
+  if(!mode)return;
+  if(!nameOk()){toast('แก้ชื่อ skill ก่อน: '+nameProblem());const n=$('#name');n.scrollIntoView({block:'center'});n.focus();return}
+  const n=st.name.trim();save(n+'.zip',makeZip([{name:n+'/SKILL.md',data:skillMd()}]));
+});
+$('#saveDraft').addEventListener('click',()=>{
+  if(!mode)return;
+  const d=new Date(),p2=x=>String(x).padStart(2,'0'),stamp=d.getFullYear()+p2(d.getMonth()+1)+p2(d.getDate())+'-'+p2(d.getHours())+p2(d.getMinutes());
+  save((st.name.trim()||'skill')+'-draft-'+stamp+'.json',JSON.stringify({app:'skillform',v:1,data:st},null,2));
+});
+$('#openDraft').addEventListener('click',()=>$('#draftFile').click());
+$('#draftFile').addEventListener('change',async e=>{
+  const file=e.target.files[0];e.target.value='';if(!file)return;
+  try{
+    const j=JSON.parse(await file.text()),src=j&&j.app==='skillform'?j.data:j;
+    if(!src||typeof src!=='object'||!('name' in src))throw 0;
+    const o=EMPTY();
+    for(const k in o){
+      if(Array.isArray(o[k])){if(Array.isArray(src[k]))o[k]=src[k].filter(x=>x&&typeof x==='object').map(x=>Object.fromEntries(R[k].f.map(([n,,t,op])=>[n,typeof x[n]==='string'?x[n]:(t==='s'?op[0]:'')])))}
+      else if(typeof src[k]==='string')o[k]=src[k];
+    }
+    st=o;fill();toast('เปิดร่างแล้ว ทำต่อได้เลย');
+  }catch(err){toast('ไฟล์นี้ไม่ใช่ร่างของแบบฟอร์มนี้')}
+});
+$('#sample').addEventListener('click',()=>{st=JSON.parse(JSON.stringify(SAMPLE));fill();toast('ใส่ข้อมูลตัวอย่างแล้ว')});
+let armed=false;
+$('#clear').addEventListener('click',e=>{
+  const b=e.currentTarget;
+  if(!armed){armed=true;b.lastChild.textContent='กดอีกครั้งเพื่อยืนยัน';b.style.color='var(--bad)';setTimeout(()=>{armed=false;b.lastChild.textContent='ล้างฟอร์ม';b.style.color=''},2500);return}
+  armed=false;b.lastChild.textContent='ล้างฟอร์ม';b.style.color='';
+  st=EMPTY();for(const k in R)st[k].push(Object.fromEntries(R[k].f.map(([n,,t,op])=>[n,t==='s'?op[0]:''])));fill();toast('ล้างแล้ว เริ่มกรอกได้เลย')});
+
+// ไอคอนคำอธิบายข้างชื่อช่อง + tooltip (ชี้เมาส์ / โฟกัสคีย์บอร์ด / แตะบนมือถือ)
+f.querySelectorAll('[data-k]').forEach(el=>{
+  const t=TIPS[el.dataset.k];if(!t)return;el.dataset.tip=t;
+  const lb=f.querySelector(`label[for="${el.id}"]`);
+  if(lb){const s=document.createElement('span');s.className='tipi';s.tabIndex=0;s.dataset.tip=t;s.setAttribute('role','button');s.setAttribute('aria-label','คำอธิบาย: '+t);s.innerHTML=ic('info');lb.appendChild(s)}
+});
+const tip=$('#tip');let tipOn=null;
+function showTip(el){
+  tip.textContent=el.dataset.tip;tip.classList.add('on');
+  const r=el.getBoundingClientRect(),w=Math.min(340,innerWidth-24);
+  tip.style.width=w+'px';tip.style.left=Math.max(12,Math.min(r.left,innerWidth-w-12))+'px';
+  const h=tip.offsetHeight;let y=r.bottom+8;if(y+h>innerHeight-8)y=Math.max(8,r.top-h-8);tip.style.top=y+'px';
+}
+function hideTip(){tip.classList.remove('on');tipOn=null}
+document.addEventListener('mouseover',e=>{const el=e.target.closest('[data-tip]');if(el===tipOn)return;tipOn=el;el&&el.dataset.tip?showTip(el):hideTip()});
+document.addEventListener('focusin',e=>{const el=e.target.closest('[data-tip]');el&&el.dataset.tip?(tipOn=el,showTip(el)):hideTip()});
+document.addEventListener('click',e=>{const el=e.target.closest('.tipi');if(el){e.preventDefault();showTip(el);tipOn=el}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')hideTip()});
+f.addEventListener('input',hideTip);
+addEventListener('scroll',hideTip,{passive:true});
+fill();
+}
+</script>
+</body>
+</html>

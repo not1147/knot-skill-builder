@@ -2,7 +2,10 @@
 
 แบบฟอร์มสร้าง skill (ไฟล์ `SKILL.md`) สำหรับนำเข้า AI agent — กรอกทีละหมวด ระบบเขียนไฟล์ให้สดๆ พร้อมตรวจความพร้อมก่อนนำเข้า
 
-**เปิดใช้งาน:** https://knot-skill-builder.netlify.app
+**เปิดใช้งาน** (เลือกลิงก์ไหนก็ได้ เนื้อหาเหมือนกัน):
+
+- Netlify: https://knot-skill-builder.netlify.app
+- GitHub Pages: https://not1147.github.io/knot-skill-builder/
 
 ## ใช้ทำอะไร
 
